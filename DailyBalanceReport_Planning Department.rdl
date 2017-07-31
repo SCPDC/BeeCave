@@ -1,0 +1,1891 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition" xmlns="http://schemas.microsoft.com/sqlserver/reporting/2010/01/reportdefinition">
+  <AutoRefresh>0</AutoRefresh>
+  <DataSources>
+    <DataSource Name="dsMyPermitNow">
+      <DataSourceReference>/Report Parts/Data Sources/dsMyPermitNow</DataSourceReference>
+      <rd:SecurityType>None</rd:SecurityType>
+      <rd:DataSourceID>7201d0cd-9861-4b1a-aefd-3d8e95fd08a3</rd:DataSourceID>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="ds_PlanningDailyBalance">
+      <Query>
+        <DataSourceName>dsMyPermitNow</DataSourceName>
+        <QueryParameters>
+          <QueryParameter Name="@bDate">
+            <Value>=Parameters!bDate.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@eDate">
+            <Value>=Parameters!eDate.Value</Value>
+          </QueryParameter>
+        </QueryParameters>
+        <CommandText>Select
+PlanningTechFees = 							
+							(
+							select 
+								isnull(sum(ptpptx.amount), 0.00)
+							from 
+							permitstracked_payment_xref ptpx 
+							left outer join PermitsTracked_Payment_ProjectType_XREF ptpptx on ptpptx.PaymentID = ptpx.paymentid
+							left outer join permitstracked pt on pt.PermitID = ptpx.PermitID
+							left outer join PermitsTracked_Type ptt on ptt.TypeID = ptpptx.TypeID
+	
+							where
+								pt.parishid = '43'
+								and pt.ProjectTypeID in (6,7)
+								and ptt.GLCode like '100.000.42145'
+								and ptpx.ReceivedDate &gt;= @bDate
+								and ptpx.ReceivedDate &lt;= @eDate
+								and ptpx.isVoid &lt;&gt; 1							
+								--and ptpx.PaymentType like 'Cash'
+							),
+--PlanningTechFeesCheck = 							
+--							(
+--							select 
+--								isnull(sum(ptpptx.amount), 0.00)
+--							from 
+--							permitstracked_payment_xref ptpx 
+--							left outer join PermitsTracked_Payment_ProjectType_XREF ptpptx on ptpptx.PaymentID = ptpx.paymentid and IsCategoryGroup = 0
+--							left outer join permitstracked pt on pt.PermitID = ptpx.PermitID
+--							left outer join PermitsTracked_Type ptt on ptt.TypeID = ptpptx.TypeID
+	
+--							where
+--								pt.parishid = '43'
+--								and pt.ProjectTypeID in (6,7)
+--								and ptt.GLCode like '100.000.42145'
+--								and ptpx.ReceivedDate &gt;= @bDate
+--								and ptpx.ReceivedDate &lt;= @eDate
+--								and ptpx.isVoid &lt;&gt; 1							
+--								and ptpx.PaymentType like 'Check'
+--							),
+ZoningFees = 							
+							(
+							select 
+								isnull(sum(ptpptx.amount), 0.00)
+							from 
+							permitstracked_payment_xref ptpx 
+							left outer join PermitsTracked_Payment_ProjectType_XREF ptpptx on ptpptx.PaymentID = ptpx.paymentid and IsCategoryGroup = 0
+							left outer join permitstracked pt on pt.PermitID = ptpx.PermitID
+							left outer join PermitsTracked_Type ptt on ptt.TypeID = ptpptx.TypeID
+	
+							where
+								pt.parishid = '43'
+								and pt.ProjectTypeID in (6,7)
+								and ptt.GLCode like '100.000.42200'
+								and ptpx.ReceivedDate &gt;= @bDate
+								and ptpx.ReceivedDate &lt;= @eDate
+								and ptpx.isVoid &lt;&gt; 1							
+								--and ptpx.PaymentType like 'Cash'
+							),
+--ZoningFeesCheck = 							
+--							(
+--							select 
+--								isnull(sum(ptpptx.amount), 0.00)
+--							from 
+--							permitstracked_payment_xref ptpx 
+--							left outer join PermitsTracked_Payment_ProjectType_XREF ptpptx on ptpptx.PaymentID = ptpx.paymentid and IsCategoryGroup = 0
+--							left outer join permitstracked pt on pt.PermitID = ptpx.PermitID
+--							left outer join PermitsTracked_Type ptt on ptt.TypeID = ptpptx.TypeID
+	
+--							where
+--								pt.parishid = '43'
+--								and pt.ProjectTypeID in (6,7)
+--								and ptt.GLCode like '42200'
+--								and ptpx.ReceivedDate &gt;= @bDate
+--								and ptpx.ReceivedDate &lt;= @eDate
+--								and ptpx.isVoid &lt;&gt; 1							
+--								and ptpx.PaymentType like 'Check'
+--								),
+ConditionalUseFees = 							
+							(
+							select 
+								isnull(sum(ptpptx.amount), 0.00)
+							from 
+							permitstracked_payment_xref ptpx 
+							left outer join PermitsTracked_Payment_ProjectType_XREF ptpptx on ptpptx.PaymentID = ptpx.paymentid and IsCategoryGroup = 0
+							left outer join permitstracked pt on pt.PermitID = ptpx.PermitID
+							left outer join PermitsTracked_Type ptt on ptt.TypeID = ptpptx.TypeID
+	
+							where
+								pt.parishid = '43'
+								and pt.ProjectTypeID in (6,7)
+								and ptt.GLCode like '100.000.42230'
+								and ptpx.ReceivedDate &gt;= @bDate
+								and ptpx.ReceivedDate &lt;= @eDate
+								and ptpx.isVoid &lt;&gt; 1							
+								--and ptpx.PaymentType like 'Cash'
+							),
+--ConditionalUseFeesCheck = 							
+--							(
+--							select 
+--								isnull(sum(ptpptx.amount), 0.00)
+--							from 
+--							permitstracked_payment_xref ptpx 
+--							left outer join PermitsTracked_Payment_ProjectType_XREF ptpptx on ptpptx.PaymentID = ptpx.paymentid and IsCategoryGroup = 0
+--							left outer join permitstracked pt on pt.PermitID = ptpx.PermitID
+--							left outer join PermitsTracked_Type ptt on ptt.TypeID = ptpptx.TypeID
+	
+--							where
+--								pt.parishid = '43'
+--								and pt.ProjectTypeID in (6,7)
+--								and ptt.GLCode like '42230'
+--								and ptpx.ReceivedDate &gt;= @bDate
+--								and ptpx.ReceivedDate &lt;= @eDate
+--								and ptpx.isVoid &lt;&gt; 1							
+--								and ptpx.PaymentType like 'Check'
+--								),								
+VarianceFees = 							
+							(
+							select 
+								isnull(sum(ptpptx.amount), 0.00)
+							from 
+							permitstracked_payment_xref ptpx 
+							left outer join PermitsTracked_Payment_ProjectType_XREF ptpptx on ptpptx.PaymentID = ptpx.paymentid and IsCategoryGroup = 0
+							left outer join permitstracked pt on pt.PermitID = ptpx.PermitID
+							left outer join PermitsTracked_Type ptt on ptt.TypeID = ptpptx.TypeID
+	
+							where
+								pt.parishid = '43'
+								and pt.ProjectTypeID in (6,7)
+								and ptt.GLCode like '100.000.42290'
+								and ptpx.ReceivedDate &gt;= @bDate
+								and ptpx.ReceivedDate &lt;= @eDate
+								and ptpx.isVoid &lt;&gt; 1							
+								--and ptpx.PaymentType like 'Cash'
+							),
+--VarianceFeesCheck = 							
+--							(
+--							select 
+--								isnull(sum(ptpptx.amount), 0.00)
+--							from 
+--							permitstracked_payment_xref ptpx 
+--							left outer join PermitsTracked_Payment_ProjectType_XREF ptpptx on ptpptx.PaymentID = ptpx.paymentid and IsCategoryGroup = 0
+--							left outer join permitstracked pt on pt.PermitID = ptpx.PermitID
+--							left outer join PermitsTracked_Type ptt on ptt.TypeID = ptpptx.TypeID
+	
+--							where
+--								pt.parishid = '43'
+--								and pt.ProjectTypeID in (6,7)
+--								and ptt.GLCode like '42290'
+--								and ptpx.ReceivedDate &gt;= @bDate
+--								and ptpx.ReceivedDate &lt;= @eDate
+--								and ptpx.isVoid &lt;&gt; 1							
+--								and ptpx.PaymentType like 'Check'
+--								),	
+SubdivisionFees = 							
+							(
+							select 
+								isnull(sum(ptpptx.amount), 0.00)
+							from 
+							permitstracked_payment_xref ptpx 
+							left outer join PermitsTracked_Payment_ProjectType_XREF ptpptx on ptpptx.PaymentID = ptpx.paymentid and IsCategoryGroup = 0
+							left outer join permitstracked pt on pt.PermitID = ptpx.PermitID
+							left outer join PermitsTracked_Type ptt on ptt.TypeID = ptpptx.TypeID
+	
+							where
+								pt.parishid = '43'
+								and pt.ProjectTypeID in (6,7)
+								and ptt.GLCode like '100.000.42280'
+								and ptpx.ReceivedDate &gt;= @bDate
+								and ptpx.ReceivedDate &lt;= @eDate
+								and ptpx.isVoid &lt;&gt; 1							
+								--and ptpx.PaymentType like 'Cash'
+							),
+--SubdivisionFeesCheck = 							
+--							(
+--							select 
+--								isnull(sum(ptpptx.amount), 0.00)
+--							from 
+--							permitstracked_payment_xref ptpx 
+--							left outer join PermitsTracked_Payment_ProjectType_XREF ptpptx on ptpptx.PaymentID = ptpx.paymentid and IsCategoryGroup = 0
+--							left outer join permitstracked pt on pt.PermitID = ptpx.PermitID
+--							left outer join PermitsTracked_Type ptt on ptt.TypeID = ptpptx.TypeID
+	
+--							where
+--								pt.parishid = '43'
+--								and pt.ProjectTypeID in (6,7)
+--								and ptt.GLCode like '42280'
+--								and ptpx.ReceivedDate &gt;= @bDate
+--								and ptpx.ReceivedDate &lt;= @eDate
+--								and ptpx.isVoid &lt;&gt; 1							
+--								and ptpx.PaymentType like 'Check'
+--								),
+ParklandFees = 							
+							(
+							select 
+								isnull(sum(ptpptx.amount), 0.00)
+							from 
+							permitstracked_payment_xref ptpx 
+							left outer join PermitsTracked_Payment_ProjectType_XREF ptpptx on ptpptx.PaymentID = ptpx.paymentid and IsCategoryGroup = 0
+							left outer join permitstracked pt on pt.PermitID = ptpx.PermitID
+							left outer join PermitsTracked_Type ptt on ptt.TypeID = ptpptx.TypeID
+	
+							where
+								pt.parishid = '43'
+								and pt.ProjectTypeID in (6,7)
+								and ptt.GLCode like '270.000.45430'
+								and ptpx.ReceivedDate &gt;= @bDate
+								and ptpx.ReceivedDate &lt;= @eDate
+								and ptpx.isVoid &lt;&gt; 1							
+								--and ptpx.PaymentType like 'Cash'
+							),
+--ParkLandFeesCheck = 							
+--							(
+--							select 
+--								isnull(sum(ptpptx.amount), 0.00)
+--							from 
+--							permitstracked_payment_xref ptpx 
+--							left outer join PermitsTracked_Payment_ProjectType_XREF ptpptx on ptpptx.PaymentID = ptpx.paymentid and IsCategoryGroup = 0
+--							left outer join permitstracked pt on pt.PermitID = ptpx.PermitID
+--							left outer join PermitsTracked_Type ptt on ptt.TypeID = ptpptx.TypeID
+	
+--							where
+--								pt.parishid = '43'
+--								and pt.ProjectTypeID in (6,7)
+--								and ptt.GLCode like '270.000.45430'
+--								and ptpx.ReceivedDate &gt;= @bDate
+--								and ptpx.ReceivedDate &lt;= @eDate
+--								and ptpx.isVoid &lt;&gt; 1							
+--								and ptpx.PaymentType like 'Check'
+--								),
+
+
+DiscoverTotal =						
+							(
+							select 
+								isnull(sum(ptpptx.amount), 0.00)
+							from 
+							permitstracked_payment_xref ptpx 
+							left outer join PermitsTracked_Payment_ProjectType_XREF ptpptx on ptpptx.PaymentID = ptpx.paymentid and IsCategoryGroup = 0
+							left outer join permitstracked pt on pt.PermitID = ptpx.PermitID
+							left outer join PermitsTracked_Type ptt on ptt.TypeID = ptpptx.TypeID
+	
+							where
+								pt.parishid = '43'
+								and pt.ProjectTypeID in (6,7)
+								and ptpx.ReceivedDate &gt;= @bDate
+								and ptpx.ReceivedDate &lt;= @eDate
+								and ptpx.isVoid &lt;&gt; 1							
+								and ptpx.PaymentType like 'Discover'
+							),
+MasterCardTotal =						
+							(
+							select 
+								isnull(sum(ptpptx.amount), 0.00)
+							from 
+							permitstracked_payment_xref ptpx 
+							left outer join PermitsTracked_Payment_ProjectType_XREF ptpptx on ptpptx.PaymentID = ptpx.paymentid and IsCategoryGroup = 0
+							left outer join permitstracked pt on pt.PermitID = ptpx.PermitID
+							left outer join PermitsTracked_Type ptt on ptt.TypeID = ptpptx.TypeID
+	
+							where
+								pt.parishid = '43'
+								and pt.ProjectTypeID in (6,7)
+								and ptpx.ReceivedDate &gt;= @bDate
+								and ptpx.ReceivedDate &lt;= @eDate
+								and ptpx.isVoid &lt;&gt; 1							
+								and ptpx.PaymentType like 'Master Card'
+							),
+VisaTotal =						
+							(
+							select 
+								isnull(sum(ptpptx.amount), 0.00)
+							from 
+							permitstracked_payment_xref ptpx 
+							left outer join PermitsTracked_Payment_ProjectType_XREF ptpptx on ptpptx.PaymentID = ptpx.paymentid and IsCategoryGroup = 0
+							left outer join permitstracked pt on pt.PermitID = ptpx.PermitID
+							left outer join PermitsTracked_Type ptt on ptt.TypeID = ptpptx.TypeID
+	
+							where
+								pt.parishid = '43'
+								and pt.ProjectTypeID in (6,7)
+								and ptpx.ReceivedDate &gt;= @bDate
+								and ptpx.ReceivedDate &lt;= @eDate
+								and ptpx.isVoid &lt;&gt; 1							
+								and ptpx.PaymentType like 'Visa'
+							)</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+      </Query>
+      <Fields>
+        <Field Name="PlanningTechFees">
+          <DataField>PlanningTechFees</DataField>
+          <rd:TypeName>System.Decimal</rd:TypeName>
+        </Field>
+        <Field Name="ZoningFees">
+          <DataField>ZoningFees</DataField>
+          <rd:TypeName>System.Decimal</rd:TypeName>
+        </Field>
+        <Field Name="ConditionalUseFees">
+          <DataField>ConditionalUseFees</DataField>
+          <rd:TypeName>System.Decimal</rd:TypeName>
+        </Field>
+        <Field Name="VarianceFees">
+          <DataField>VarianceFees</DataField>
+          <rd:TypeName>System.Decimal</rd:TypeName>
+        </Field>
+        <Field Name="SubdivisionFees">
+          <DataField>SubdivisionFees</DataField>
+          <rd:TypeName>System.Decimal</rd:TypeName>
+        </Field>
+        <Field Name="ParklandFees">
+          <DataField>ParklandFees</DataField>
+          <rd:TypeName>System.Decimal</rd:TypeName>
+        </Field>
+        <Field Name="DiscoverTotal">
+          <DataField>DiscoverTotal</DataField>
+          <rd:TypeName>System.Decimal</rd:TypeName>
+        </Field>
+        <Field Name="MasterCardTotal">
+          <DataField>MasterCardTotal</DataField>
+          <rd:TypeName>System.Decimal</rd:TypeName>
+        </Field>
+        <Field Name="VisaTotal">
+          <DataField>VisaTotal</DataField>
+          <rd:TypeName>System.Decimal</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+  </DataSets>
+  <ReportSections>
+    <ReportSection>
+      <Body>
+        <ReportItems>
+          <Textbox Name="Textbox1">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>DATE:</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>0.24875in</Top>
+            <Left>0.24875in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.85417in</Width>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox2">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Bag Number_____________________</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>0.24875in</Top>
+            <Left>4.625in</Left>
+            <Height>0.23959in</Height>
+            <Width>2.625in</Width>
+            <ZIndex>1</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox3">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Receipt #_________________ to _________________                             _________________ to _________________ </Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>0.55778in</Top>
+            <Left>0.24875in</Left>
+            <Height>0.23959in</Height>
+            <Width>7.5in</Width>
+            <ZIndex>2</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox4">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Voided Receipts_________________                _________________               _________________ </Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>0.86682in</Top>
+            <Left>0.24875in</Left>
+            <Height>0.23959in</Height>
+            <Width>7.5in</Width>
+            <ZIndex>3</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox5">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Description                                                                                  GL Code                               Transaction Code                           Amount</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>1.17585in</Top>
+            <Left>0.24875in</Left>
+            <Height>0.23959in</Height>
+            <Width>7.5in</Width>
+            <ZIndex>4</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <BottomBorder>
+                <Style>Solid</Style>
+              </BottomBorder>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox6">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>ZONING</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>1.48488in</Top>
+            <Left>0.24875in</Left>
+            <Height>0.23959in</Height>
+            <Width>2.53125in</Width>
+            <ZIndex>5</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox7">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>CONDITIONAL USE PERMITS</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>1.79392in</Top>
+            <Left>0.24875in</Left>
+            <Height>0.23959in</Height>
+            <Width>2.53125in</Width>
+            <ZIndex>6</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox8">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>SUBDIVISION</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>2.10295in</Top>
+            <Left>0.24875in</Left>
+            <Height>0.23959in</Height>
+            <Width>2.53125in</Width>
+            <ZIndex>7</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox9">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>MPN TECHNOLOGY FEE</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>2.72106in</Top>
+            <Left>0.24875in</Left>
+            <Height>0.23959in</Height>
+            <Width>2.53125in</Width>
+            <ZIndex>8</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox10">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>PARKLAND DEDICATION FEE</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>3.0301in</Top>
+            <Left>0.24875in</Left>
+            <Height>0.23959in</Height>
+            <Width>2.53125in</Width>
+            <ZIndex>9</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox25">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>100.000.42200</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>1.48488in</Top>
+            <Left>2.84944in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.89583in</Width>
+            <ZIndex>10</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox26">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>100.000.42230</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>1.79392in</Top>
+            <Left>2.84944in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.89583in</Width>
+            <ZIndex>11</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox27">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>100.000.42280</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>2.10295in</Top>
+            <Left>2.84944in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.89583in</Width>
+            <ZIndex>12</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox28">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>100.000.42145</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>2.72106in</Top>
+            <Left>2.84944in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.89583in</Width>
+            <ZIndex>13</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox29">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>270.000.45430</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>3.03009in</Top>
+            <Left>2.84944in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.89583in</Width>
+            <ZIndex>14</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox44">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>101</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Center</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>1.48489in</Top>
+            <Left>4.81472in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.4375in</Width>
+            <ZIndex>15</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox45">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>102</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Center</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>1.79393in</Top>
+            <Left>4.81472in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.4375in</Width>
+            <ZIndex>16</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox46">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>103</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Center</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>2.10296in</Top>
+            <Left>4.81472in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.4375in</Width>
+            <ZIndex>17</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox47">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>105</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Center</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>2.72108in</Top>
+            <Left>4.81472in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.4375in</Width>
+            <ZIndex>18</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox48">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>106</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Center</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>3.03011in</Top>
+            <Left>4.81472in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.4375in</Width>
+            <ZIndex>19</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox63">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>VARIANCE</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>2.41199in</Top>
+            <Left>0.24875in</Left>
+            <Height>0.23959in</Height>
+            <Width>2.53125in</Width>
+            <ZIndex>20</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox64">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>100.000.42290</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>2.41198in</Top>
+            <Left>2.84944in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.89583in</Width>
+            <ZIndex>21</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox65">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>104</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Center</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>2.412in</Top>
+            <Left>4.81472in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.4375in</Width>
+            <ZIndex>22</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox66">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=Fields!ZoningFees.Value</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <Format>'$'#,0.00;('$'#,0.00)</Format>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>1.4849in</Top>
+            <Left>6.32166in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.40625in</Width>
+            <ZIndex>23</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox67">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=Fields!ConditionalUseFees.Value</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <Format>'$'#,0.00;('$'#,0.00)</Format>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>1.79394in</Top>
+            <Left>6.32166in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.40625in</Width>
+            <ZIndex>24</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox68">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=Fields!SubdivisionFees.Value</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <Format>'$'#,0.00;('$'#,0.00)</Format>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>2.10297in</Top>
+            <Left>6.32166in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.40625in</Width>
+            <ZIndex>25</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox69">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=Fields!PlanningTechFees.Value</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <Format>'$'#,0.00;('$'#,0.00)</Format>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>2.72108in</Top>
+            <Left>6.32166in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.40625in</Width>
+            <ZIndex>26</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox70">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=Fields!ParklandFees.Value</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <Format>'$'#,0.00;('$'#,0.00)</Format>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>3.03011in</Top>
+            <Left>6.32166in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.40625in</Width>
+            <ZIndex>27</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox85">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=Fields!VarianceFees.Value</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <Format>'$'#,0.00;('$'#,0.00)</Format>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>2.412in</Top>
+            <Left>6.32166in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.40625in</Width>
+            <ZIndex>28</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox86">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>TOTAL</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>7.97466in</Top>
+            <Left>4.8147in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.4375in</Width>
+            <ZIndex>29</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox87">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=sum(Fields!ZoningFees.Value+Fields!ConditionalUseFees.Value+Fields!SubdivisionFees.Value+Fields!VarianceFees.Value+Fields!PlanningTechFees.Value+Fields!ParklandFees.Value)</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <Format>'$'#,0.00;('$'#,0.00)</Format>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>7.97466in</Top>
+            <Left>6.32164in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.40625in</Width>
+            <ZIndex>30</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox88">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Finance Personnel</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>8.87469in</Top>
+            <Left>4.81472in</Left>
+            <Height>0.23959in</Height>
+            <Width>2.91319in</Width>
+            <ZIndex>31</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <TopBorder>
+                <Style>Solid</Style>
+              </TopBorder>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox89">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Planning Personnel</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>9.68998in</Top>
+            <Left>4.81472in</Left>
+            <Height>0.23959in</Height>
+            <Width>2.91319in</Width>
+            <ZIndex>32</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <TopBorder>
+                <Style>Solid</Style>
+              </TopBorder>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox90">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Credit Cards Totals:</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>8.26358in</Top>
+            <Left>0.24875in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.32986in</Width>
+            <ZIndex>33</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox91">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Discover</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>8.57261in</Top>
+            <Left>0.24876in</Left>
+            <Height>0.23959in</Height>
+            <Width>0.86111in</Width>
+            <ZIndex>34</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox92">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Master Card</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>8.88165in</Top>
+            <Left>0.24876in</Left>
+            <Height>0.23959in</Height>
+            <Width>0.86111in</Width>
+            <ZIndex>35</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox93">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Visa</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>9.19068in</Top>
+            <Left>0.24876in</Left>
+            <Height>0.23959in</Height>
+            <Width>0.86111in</Width>
+            <ZIndex>36</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox94">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Total</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>9.49972in</Top>
+            <Left>0.24876in</Left>
+            <Height>0.23959in</Height>
+            <Width>0.86111in</Width>
+            <ZIndex>37</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox96">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=Fields!DiscoverTotal.Value</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                      <Format>'$'#,0.00;('$'#,0.00)</Format>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>8.57261in</Top>
+            <Left>1.17931in</Left>
+            <Height>0.23959in</Height>
+            <Width>0.9236in</Width>
+            <ZIndex>38</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox97">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=Fields!MasterCardTotal.Value</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                      <Format>'$'#,0.00;('$'#,0.00)</Format>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>8.88165in</Top>
+            <Left>1.17932in</Left>
+            <Height>0.23959in</Height>
+            <Width>0.9236in</Width>
+            <ZIndex>39</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox98">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=Fields!VisaTotal.Value</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                      <Format>'$'#,0.00;('$'#,0.00)</Format>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>9.19068in</Top>
+            <Left>1.17932in</Left>
+            <Height>0.23959in</Height>
+            <Width>0.9236in</Width>
+            <ZIndex>40</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox99">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=sum(Fields!DiscoverTotal.Value+Fields!MasterCardTotal.Value+Fields!VisaTotal.Value)</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                      <Format>'$'#,0.00;('$'#,0.00)</Format>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>9.49972in</Top>
+            <Left>1.17931in</Left>
+            <Height>0.23959in</Height>
+            <Width>0.9236in</Width>
+            <ZIndex>41</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <TopBorder>
+                <Style>Solid</Style>
+              </TopBorder>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox95">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Online Totals:</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>8.26358in</Top>
+            <Left>2.47444in</Left>
+            <Height>0.23959in</Height>
+            <Width>1.10069in</Width>
+            <ZIndex>42</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox100">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value />
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                      <Format>'$'#,0.00;('$'#,0.00)</Format>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>8.57261in</Top>
+            <Left>3.09249in</Left>
+            <Height>0.23959in</Height>
+            <Width>0.95486in</Width>
+            <ZIndex>43</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Textbox101">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Online</Value>
+                    <Style>
+                      <FontFamily>Times New Roman</FontFamily>
+                      <FontWeight>Bold</FontWeight>
+                      <Format>'$'#,0.00;('$'#,0.00)</Format>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox1</rd:DefaultName>
+            <Top>8.57261in</Top>
+            <Left>2.47444in</Left>
+            <Height>0.23959in</Height>
+            <Width>0.54861in</Width>
+            <ZIndex>44</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+        </ReportItems>
+        <Height>10.03125in</Height>
+        <Style>
+          <Border>
+            <Style>None</Style>
+          </Border>
+        </Style>
+      </Body>
+      <Width>8in</Width>
+      <Page>
+        <LeftMargin>0.25in</LeftMargin>
+        <RightMargin>0.25in</RightMargin>
+        <TopMargin>0.25in</TopMargin>
+        <BottomMargin>0.25in</BottomMargin>
+        <Style />
+      </Page>
+    </ReportSection>
+  </ReportSections>
+  <ReportParameters>
+    <ReportParameter Name="bDate">
+      <DataType>DateTime</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>=DateAdd("d", -1, Today())</Value>
+        </Values>
+      </DefaultValue>
+      <Prompt>Start Date</Prompt>
+    </ReportParameter>
+    <ReportParameter Name="eDate">
+      <DataType>DateTime</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>=DateAdd("d", -1, Today())</Value>
+        </Values>
+      </DefaultValue>
+      <Prompt>End Date</Prompt>
+    </ReportParameter>
+  </ReportParameters>
+  <rd:ReportUnitType>Inch</rd:ReportUnitType>
+  <rd:ReportServerUrl>http://sql.mypermitnow.org/reportserver</rd:ReportServerUrl>
+  <rd:ReportID>c8c6183b-fd34-4830-b70b-eae8e4cfa16a</rd:ReportID>
+</Report>
