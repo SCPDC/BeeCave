@@ -1,0 +1,1132 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition" xmlns="http://schemas.microsoft.com/sqlserver/reporting/2010/01/reportdefinition">
+  <AutoRefresh>0</AutoRefresh>
+  <DataSources>
+    <DataSource Name="MyPermitNow">
+      <DataSourceReference>/Report Parts/Data Sources/dsMyPermitNow</DataSourceReference>
+      <rd:SecurityType>None</rd:SecurityType>
+      <rd:DataSourceID>056e3df9-e8b4-4ff4-972a-527044e4c328</rd:DataSourceID>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="ds_EscrowBalanceSheet">
+      <Query>
+        <DataSourceName>MyPermitNow</DataSourceName>
+        <QueryParameters>
+          <QueryParameter Name="@Month">
+            <Value>=Parameters!Month.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@ContractorID">
+            <Value>=Parameters!ContractorID.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@Year">
+            <Value>=Parameters!Year.Value</Value>
+          </QueryParameter>
+        </QueryParameters>
+        <CommandText>--Starting Balance
+Select
+	Sort = 0,
+	PaymentID = -1,
+	RecievedDate = @Month+'/1/'+@Year,
+	Description = 'Starting Balance',
+	Credit = 0,
+	Debit = 0,	
+	Balance = (
+			isnull((select
+			sum(clpx.amount)
+			from
+			ContractorLicense_Payment_XREF clpx
+			where
+			clpx.isAddFund = 1
+			and isnull(clpx.isVoid,0)=0
+			and clpx.ContractorID = @ContractorID
+			and clpx.ReceivedDate &lt; @Month+'/1/'+@Year),0)
+			-
+			isnull((Select
+			SUM(ptpx.amount)
+			from
+			PermitsTracked_Payment_XREF ptpx
+			left outer join PermitsTracked pt on pt.PermitId = ptpx.PermitID
+			left outer join PermitsTracked_Contact_XREF ptcx on ptcx.ContactID = ptpx.ContactID
+			where
+			isnull(ptpx.isVoid,0) = 0
+			and ptpx.PaymentType like 'Escrow'
+			and ptcx.ContractorID_Jurisdiction = @ContractorID
+			and ptpx.ReceivedDate &lt; @Month+'/1/'+@Year),0)
+			-
+			isnull((select
+			sum(clpx.amount)
+			from
+			ContractorLicense_Payment_XREF clpx
+			where
+			isnull(clpx.isAddFund,0) = 0
+			and isnull(clpx.isVoid,0)=0
+			and clpx.ContractorID = @ContractorID
+			and clpx.PaymentType like 'Escrow'
+			and clpx.ReceivedDate &lt; @Month+'/1/'+@Year),0))
+Union
+--Permit Payments		
+Select
+	Sort = 1,
+	PaymentID = ptpx.paymentID,
+	RecievedDate = ptpx.receiveddate,
+	Description = cast(pt.permitnumber as nvarchar)+' - '+ptpx.description,
+	Credit = 0,
+	Debit = ptpx.Amount	* -1,
+	Balance = ptpx.Amount	* -1
+	from
+	PermitsTracked_Payment_XREF ptpx
+	left outer join PermitsTracked pt on pt.PermitId = ptpx.PermitID
+	left outer join PermitsTracked_Contact_XREF ptcx on ptcx.ContactID = ptpx.ContactID
+	where
+	isnull(ptpx.isVoid,0) = 0
+	and ptpx.PaymentType like 'Escrow'
+	and ptcx.ContractorID_Jurisdiction = @ContractorID
+	and ptpx.ReceivedDate &gt;= @Month+'/1/'+@Year
+	and ptpx.ReceivedDate &lt; dateadd(m,1,@Month+'/1/'+@Year)
+Union
+--Contractor Payments
+Select
+Sort = 1,
+PaymentID = clpx.paymentId,
+RecievedDate = clpx.ReceivedDate,
+Description = clpx.Description,
+Credit = 0,
+Debit = clpx.Amount	* -1,
+Balance = clpx.Amount * -1
+from
+			ContractorLicense_Payment_XREF clpx
+			where
+			isnull(clpx.isAddFund,0) = 0
+			and isnull(clpx.isVoid,0)=0
+			and clpx.ContractorID = @ContractorID
+			and clpx.PaymentType like 'Escrow'
+			and clpx.ReceivedDate &gt;= @Month+'/1/'+@Year
+			and clpx.ReceivedDate &lt; dateadd(m,1,@Month+'/1/'+@Year)
+Union
+--Add Escrow Funds
+
+Select
+Sort = 1,
+PaymentID = clpx.PaymentId,
+RecievedDate = clpx.ReceivedDate,
+Description = case when clpx.Amount &gt; 0 then 'Funds Added to Escrow: ' when clpx.Amount &lt; 0 then 'Escrow Account Deduction: 'end +clpx.Description,
+Credit = clpx.amount,
+Debit = 0,
+Balance = clpx.amount
+from
+			ContractorLicense_Payment_XREF clpx
+			where
+			clpx.isAddFund = 1
+			and isnull(clpx.isVoid,0)=0
+			and clpx.ContractorID = @ContractorID
+			and clpx.ReceivedDate &gt;= @Month+'/1/'+@Year
+			and clpx.ReceivedDate &lt; dateadd(m,1,@Month+'/1/'+@Year)
+
+Union
+--Ending Balance
+Select
+Sort = 2,
+PaymentID = -1,
+ReceivedDate = dateadd(d, -1,(DATEADD(m,1,@Month+'/1/'+@Year))),
+Description = 'Ending Balance',
+Credit = 0,
+Debit = 0,
+Balance = ((
+			isnull((select
+			sum(clpx.amount)
+			from
+			ContractorLicense_Payment_XREF clpx
+			where
+			clpx.isAddFund = 1
+			and isnull(clpx.isVoid,0)=0
+			and clpx.ContractorID = @ContractorID
+			and clpx.ReceivedDate &lt; @Month+'/1/'+@Year),0)
+			-
+			isnull((Select
+			SUM(ptpx.amount)
+			from
+			PermitsTracked_Payment_XREF ptpx
+			left outer join PermitsTracked pt on pt.PermitId = ptpx.PermitID
+			left outer join PermitsTracked_Contact_XREF ptcx on ptcx.ContactID = ptpx.ContactID
+			where
+			isnull(ptpx.isVoid,0) = 0
+			and ptpx.PaymentType like 'Escrow'
+			and ptcx.ContractorID_Jurisdiction = @ContractorID
+			and ptpx.ReceivedDate &lt; @Month+'/1/'+@Year),0)
+			-
+			isnull((select
+			sum(clpx.amount)
+			from
+			ContractorLicense_Payment_XREF clpx
+			where
+			isnull(clpx.isAddFund,0) = 0
+			and isnull(clpx.isVoid,0)=0
+			and clpx.ContractorID = @ContractorID
+			and clpx.PaymentType like 'Escrow'
+			and clpx.ReceivedDate &lt; @Month+'/1/'+@Year),0))
+			+
+			isnull((select
+			sum(clpx.amount)
+			from
+			ContractorLicense_Payment_XREF clpx
+			where
+			clpx.isAddFund = 1
+			and isnull(clpx.isVoid,0)=0
+			and clpx.ContractorID = @ContractorID
+			and clpx.ReceivedDate &gt;= @Month+'/1/'+@Year
+			and clpx.ReceivedDate &lt; dateadd(m,1,@Month+'/1/'+@Year)),0)
+			-
+			isnull((Select
+			SUM(ptpx.amount)
+			from
+			PermitsTracked_Payment_XREF ptpx
+			left outer join PermitsTracked pt on pt.PermitId = ptpx.PermitID
+			left outer join PermitsTracked_Contact_XREF ptcx on ptcx.ContactID = ptpx.ContactID
+			where
+			isnull(ptpx.isVoid,0) = 0
+			and ptpx.PaymentType like 'Escrow'
+			and ptcx.ContractorID_Jurisdiction = @ContractorID
+			and ptpx.ReceivedDate &gt;= @Month+'/1/'+@Year
+			and ptpx.ReceivedDate &lt; dateadd(m,1,@Month+'/1/'+@Year)),0)
+			-
+			isnull((select
+			sum(clpx.amount)
+			from
+			ContractorLicense_Payment_XREF clpx
+			where
+			isnull(clpx.isAddFund,0) = 0
+			and isnull(clpx.isVoid,0)=0
+			and clpx.ContractorID = @ContractorID
+			and clpx.PaymentType like 'Escrow'
+			and clpx.ReceivedDate &gt;= @Month+'/1/'+@Year
+			and clpx.ReceivedDate &lt; dateadd(m,1,@Month+'/1/'+@Year)),0))
+
+Order by Sort, RecievedDate</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+      </Query>
+      <Fields>
+        <Field Name="RecievedDate">
+          <DataField>RecievedDate</DataField>
+          <rd:TypeName>System.DateTime</rd:TypeName>
+        </Field>
+        <Field Name="Sort">
+          <DataField>Sort</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+        <Field Name="PaymentID">
+          <DataField>PaymentID</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+        <Field Name="Description">
+          <DataField>Description</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Credit">
+          <DataField>Credit</DataField>
+          <rd:TypeName>System.Decimal</rd:TypeName>
+        </Field>
+        <Field Name="Debit">
+          <DataField>Debit</DataField>
+          <rd:TypeName>System.Decimal</rd:TypeName>
+        </Field>
+        <Field Name="Balance">
+          <DataField>Balance</DataField>
+          <rd:TypeName>System.Decimal</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="ds_ContractorInfo">
+      <Query>
+        <DataSourceName>MyPermitNow</DataSourceName>
+        <QueryParameters>
+          <QueryParameter Name="@ContractorID">
+            <Value>=Parameters!ContractorID.Value</Value>
+          </QueryParameter>
+        </QueryParameters>
+        <CommandText>Select
+Jurisdiction = p.parishname,
+Name = case when len(ltrim(rtrim(clj.businessname)))&gt;0 and len(ltrim(rtrim(clj.FirstName)))&gt;0 then isnull(clj.BusinessName,'')+char(10)+'Attn: '+isnull(clj.FirstName,'')+' '+isnull(clj.LastName,'')
+				when LEN(ltrim(rtrim(clj.businessname))) &gt; 0 and LEN(ltrim(rtrim(clj.firstname)))&lt;= 0 then isnull(clj.BusinessName,'')
+				else isnull(clj.FirstName,'')+' '+isnull(clj.LastName,'') end,
+--Name = case when len(ltrim(rtrim(clj.businessname))) &lt;= 0 then isnull(clj.FirstName,'')+' '+isnull(clj.LastName,'') else 'Attn: '+isnull(clj.FirstName,'')+' '+isnull(clj.LastName,'') end,
+MailingAddress = isnull(clj.BusinessMailingAddress1,''),
+MailingAddress2 = isnull(clj.BusinessMailingAddress2,''),
+MailingCSZ = isnull(clj.BusinessMailingCity,'')+', '+isnull(clj.BusinessMailingState,'')+' '+isnull(cast(clj.BusinessMailingZipCode as nvarchar),'')
+from
+ContractorLicense_Jurisdiction clj
+left outer join parish p on p.parishid = clj.jurisdictionID
+where
+clj.contractorID = @ContractorID</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+      </Query>
+      <Fields>
+        <Field Name="Jurisdiction">
+          <DataField>Jurisdiction</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Name">
+          <DataField>Name</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="MailingAddress">
+          <DataField>MailingAddress</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="MailingAddress2">
+          <DataField>MailingAddress2</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="MailingCSZ">
+          <DataField>MailingCSZ</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="ds_Logo">
+      <Query>
+        <DataSourceName>MyPermitNow</DataSourceName>
+        <QueryParameters>
+          <QueryParameter Name="@ContractorID">
+            <Value>=Parameters!ContractorID.Value</Value>
+          </QueryParameter>
+        </QueryParameters>
+        <CommandText>Select p.Logo From Parish p left outer join ContractorLicense_Jurisdiction clj on clj.JurisdictionID = p.ParishId Where clj.ContractorID = @ContractorID</CommandText>
+      </Query>
+      <Fields>
+        <Field Name="Logo">
+          <DataField>Logo</DataField>
+          <rd:TypeName>System.Byte[]</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+  </DataSets>
+  <ReportSections>
+    <ReportSection>
+      <Body>
+        <ReportItems>
+          <Tablix Name="Tablix1">
+            <TablixBody>
+              <TablixColumns>
+                <TablixColumn>
+                  <Width>1in</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>3.5in</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>1in</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>1in</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>1in</Width>
+                </TablixColumn>
+              </TablixColumns>
+              <TablixRows>
+                <TablixRow>
+                  <Height>0.25in</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Textbox2">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Received Date</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <FontSize>11pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                    <Color>White</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Textbox2</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>#7292cc</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <BackgroundColor>#4c68a2</BackgroundColor>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Textbox3">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Description</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <FontSize>11pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                    <Color>White</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Textbox3</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>#7292cc</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <BackgroundColor>#4c68a2</BackgroundColor>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Textbox5">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Credit</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <FontSize>11pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                    <Color>White</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Textbox5</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>#7292cc</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <BackgroundColor>#4c68a2</BackgroundColor>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Textbox7">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Debit</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <FontSize>11pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                    <Color>White</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Textbox7</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>#7292cc</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <BackgroundColor>#4c68a2</BackgroundColor>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Textbox9">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Balance</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <FontSize>11pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                    <Color>White</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Textbox9</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>#7292cc</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <BackgroundColor>#4c68a2</BackgroundColor>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+                <TablixRow>
+                  <Height>0.25in</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="RecievedDate">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!RecievedDate.Value</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <Format>d</Format>
+                                    <Color>#4d4d4d</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>RecievedDate</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>#e5e5e5</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Description">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Description.Value</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <Color>#4d4d4d</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Description</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>#e5e5e5</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Credit">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Credit.Value</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <Format>'$'0.00;('$'0.00)</Format>
+                                    <Color>#4d4d4d</Color>
+                                    <rd:FormatSymbolCulture>en-US</rd:FormatSymbolCulture>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Credit</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>#e5e5e5</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Debit">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Debit.Value</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <Format>'$'0.00;('$'0.00)</Format>
+                                    <Color>#4d4d4d</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Debit</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>#e5e5e5</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Balance">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Balance.Value</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <Format>'$'0.00;('$'0.00)</Format>
+                                    <Color>#4d4d4d</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Balance</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>#e5e5e5</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+              </TablixRows>
+            </TablixBody>
+            <TablixColumnHierarchy>
+              <TablixMembers>
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+              </TablixMembers>
+            </TablixColumnHierarchy>
+            <TablixRowHierarchy>
+              <TablixMembers>
+                <TablixMember>
+                  <KeepWithGroup>After</KeepWithGroup>
+                </TablixMember>
+                <TablixMember>
+                  <Group Name="Details" />
+                </TablixMember>
+              </TablixMembers>
+            </TablixRowHierarchy>
+            <DataSetName>ds_EscrowBalanceSheet</DataSetName>
+            <Top>0.82639in</Top>
+            <Height>0.5in</Height>
+            <Width>7.5in</Width>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+            </Style>
+          </Tablix>
+          <Textbox Name="BusinessName">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=First(Fields!Name.Value, "ds_ContractorInfo")</Value>
+                    <Style />
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=First(Fields!MailingAddress.Value,"ds_ContractorInfo")</Value>
+                    <Style />
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=First(Fields!MailingCSZ.Value,"ds_ContractorInfo")</Value>
+                    <Style />
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>BusinessName</rd:DefaultName>
+            <Top>0.06944in</Top>
+            <Height>0.61458in</Height>
+            <Width>7.5in</Width>
+            <ZIndex>1</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+        </ReportItems>
+        <Height>1.32986in</Height>
+        <Style>
+          <Border>
+            <Style>None</Style>
+          </Border>
+        </Style>
+      </Body>
+      <Width>7.5in</Width>
+      <Page>
+        <PageHeader>
+          <Height>1in</Height>
+          <PrintOnFirstPage>true</PrintOnFirstPage>
+          <PrintOnLastPage>true</PrintOnLastPage>
+          <ReportItems>
+            <Textbox Name="Textbox1">
+              <CanGrow>true</CanGrow>
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>Contractor Escrow Balance Report</Value>
+                      <Style>
+                        <FontWeight>Bold</FontWeight>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>=First(Fields!Jurisdiction.Value,"ds_ContractorInfo")</Value>
+                      <Style>
+                        <FontWeight>Bold</FontWeight>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>=Parameters!Month.Label</Value>
+                      <Style />
+                    </TextRun>
+                    <TextRun>
+                      <Value xml:space="preserve"> </Value>
+                      <Style />
+                    </TextRun>
+                    <TextRun>
+                      <Value>=Parameters!Year.Value</Value>
+                      <Style />
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <rd:DefaultName>Textbox1</rd:DefaultName>
+              <Left>1.06944in</Left>
+              <Height>0.59375in</Height>
+              <Width>2.88667in</Width>
+              <Style>
+                <Border>
+                  <Style>None</Style>
+                </Border>
+                <PaddingLeft>2pt</PaddingLeft>
+                <PaddingRight>2pt</PaddingRight>
+                <PaddingTop>2pt</PaddingTop>
+                <PaddingBottom>2pt</PaddingBottom>
+              </Style>
+            </Textbox>
+            <Textbox Name="ExecutionTime">
+              <CanGrow>true</CanGrow>
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>Generated </Value>
+                      <Style>
+                        <FontSize>8pt</FontSize>
+                      </Style>
+                    </TextRun>
+                    <TextRun>
+                      <Value>=Globals!ExecutionTime</Value>
+                      <Style>
+                        <FontSize>8pt</FontSize>
+                        <Format>g</Format>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Right</TextAlign>
+                  </Style>
+                </Paragraph>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>Page </Value>
+                      <Style>
+                        <FontSize>8pt</FontSize>
+                        <Format>g</Format>
+                      </Style>
+                    </TextRun>
+                    <TextRun>
+                      <Value>=Globals!OverallPageNumber</Value>
+                      <Style>
+                        <FontSize>8pt</FontSize>
+                        <Format>g</Format>
+                      </Style>
+                    </TextRun>
+                    <TextRun>
+                      <Value> of </Value>
+                      <Style>
+                        <FontSize>8pt</FontSize>
+                        <Format>g</Format>
+                      </Style>
+                    </TextRun>
+                    <TextRun>
+                      <Value>=Globals!OverallTotalPages</Value>
+                      <Style>
+                        <FontSize>8pt</FontSize>
+                        <Format>g</Format>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Right</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <rd:DefaultName>ExecutionTime</rd:DefaultName>
+              <Left>5.28819in</Left>
+              <Height>0.46875in</Height>
+              <Width>2.21181in</Width>
+              <ZIndex>1</ZIndex>
+              <Style>
+                <Border>
+                  <Style>None</Style>
+                </Border>
+                <PaddingLeft>2pt</PaddingLeft>
+                <PaddingRight>2pt</PaddingRight>
+                <PaddingTop>2pt</PaddingTop>
+                <PaddingBottom>2pt</PaddingBottom>
+              </Style>
+            </Textbox>
+            <Image Name="Image1">
+              <Source>Database</Source>
+              <Value>=First(Fields!Logo.Value, "ds_Logo")</Value>
+              <MIMEType>image/jpeg</MIMEType>
+              <Sizing>FitProportional</Sizing>
+              <Height>1in</Height>
+              <Width>1in</Width>
+              <ZIndex>2</ZIndex>
+              <Style>
+                <Border>
+                  <Style>None</Style>
+                </Border>
+              </Style>
+            </Image>
+            <Textbox Name="Balance1">
+              <CanGrow>true</CanGrow>
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>Starting Balance: </Value>
+                      <Style>
+                        <FontWeight>Bold</FontWeight>
+                      </Style>
+                    </TextRun>
+                    <TextRun>
+                      <Value>=First(Fields!Balance.Value, "ds_EscrowBalanceSheet")</Value>
+                      <Style>
+                        <FontWeight>Bold</FontWeight>
+                        <Format>'$'0.00;('$'0.00)</Format>
+                        <rd:FormatSymbolCulture>en-US</rd:FormatSymbolCulture>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <rd:DefaultName>Balance1</rd:DefaultName>
+              <Top>0.68056in</Top>
+              <Left>1.06944in</Left>
+              <Height>0.25in</Height>
+              <Width>2.5in</Width>
+              <ZIndex>3</ZIndex>
+              <Style>
+                <Border>
+                  <Style>None</Style>
+                </Border>
+                <PaddingLeft>2pt</PaddingLeft>
+                <PaddingRight>2pt</PaddingRight>
+                <PaddingTop>2pt</PaddingTop>
+                <PaddingBottom>2pt</PaddingBottom>
+              </Style>
+            </Textbox>
+            <Textbox Name="Balance2">
+              <CanGrow>true</CanGrow>
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>Ending Balance: </Value>
+                      <Style>
+                        <FontWeight>Bold</FontWeight>
+                      </Style>
+                    </TextRun>
+                    <TextRun>
+                      <Value>=Last(Fields!Balance.Value, "ds_EscrowBalanceSheet")</Value>
+                      <Style>
+                        <FontWeight>Bold</FontWeight>
+                        <Format>'$'0.00;('$'0.00)</Format>
+                        <rd:FormatSymbolCulture>en-US</rd:FormatSymbolCulture>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <rd:DefaultName>Balance1</rd:DefaultName>
+              <Top>0.68056in</Top>
+              <Left>3.63889in</Left>
+              <Height>0.25in</Height>
+              <Width>2.5in</Width>
+              <ZIndex>4</ZIndex>
+              <Style>
+                <Border>
+                  <Style>None</Style>
+                </Border>
+                <PaddingLeft>2pt</PaddingLeft>
+                <PaddingRight>2pt</PaddingRight>
+                <PaddingTop>2pt</PaddingTop>
+                <PaddingBottom>2pt</PaddingBottom>
+              </Style>
+            </Textbox>
+          </ReportItems>
+          <Style>
+            <Border>
+              <Style>None</Style>
+            </Border>
+          </Style>
+        </PageHeader>
+        <LeftMargin>0.5in</LeftMargin>
+        <RightMargin>0.5in</RightMargin>
+        <TopMargin>0.5in</TopMargin>
+        <BottomMargin>0.5in</BottomMargin>
+        <Style />
+      </Page>
+    </ReportSection>
+  </ReportSections>
+  <ReportParameters>
+    <ReportParameter Name="Month">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>=datepart("m",today())</Value>
+        </Values>
+      </DefaultValue>
+      <Prompt>Month</Prompt>
+      <ValidValues>
+        <ParameterValues>
+          <ParameterValue>
+            <Value>01</Value>
+            <Label>January</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>02</Value>
+            <Label>February</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>03</Value>
+            <Label>March</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>04</Value>
+            <Label>April</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>05</Value>
+            <Label>May</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>06</Value>
+            <Label>June</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>07</Value>
+            <Label>July</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>08</Value>
+            <Label>August</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>09</Value>
+            <Label>September</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>10</Value>
+            <Label>October</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>11</Value>
+            <Label>November</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>12</Value>
+            <Label>December</Label>
+          </ParameterValue>
+        </ParameterValues>
+      </ValidValues>
+    </ReportParameter>
+    <ReportParameter Name="Year">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>=datepart("yyyy",today())</Value>
+        </Values>
+      </DefaultValue>
+      <Prompt>Year</Prompt>
+      <ValidValues>
+        <ParameterValues>
+          <ParameterValue>
+            <Value>=datepart("yyyy",today())</Value>
+            <Label>=datepart("yyyy",today())</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>=datepart("yyyy",(dateadd("yyyy",-1,today())))</Value>
+            <Label>=datepart("yyyy",(dateadd("yyyy",-1,today())))</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>=datepart("yyyy",(dateadd("yyyy",-2,today())))</Value>
+            <Label>=datepart("yyyy",(dateadd("yyyy",-2,today())))</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>=datepart("yyyy",(dateadd("yyyy",-3,today())))</Value>
+            <Label>=datepart("yyyy",(dateadd("yyyy",-3,today())))</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>=datepart("yyyy",(dateadd("yyyy",-4,today())))</Value>
+            <Label>=datepart("yyyy",(dateadd("yyyy",-4,today())))</Label>
+          </ParameterValue>
+        </ParameterValues>
+      </ValidValues>
+    </ReportParameter>
+    <ReportParameter Name="ContractorID">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>45616</Value>
+        </Values>
+      </DefaultValue>
+      <Prompt>ContractorID</Prompt>
+      <Hidden>true</Hidden>
+    </ReportParameter>
+  </ReportParameters>
+  <rd:ReportUnitType>Inch</rd:ReportUnitType>
+  <rd:ReportServerUrl>http://reports.mypermitnow.org/reportserver</rd:ReportServerUrl>
+  <rd:ReportID>b9201348-6ef9-4bb2-866f-750de99bed63</rd:ReportID>
+</Report>

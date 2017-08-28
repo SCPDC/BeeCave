@@ -1,0 +1,277 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition" xmlns="http://schemas.microsoft.com/sqlserver/reporting/2010/01/reportdefinition">
+  <AutoRefresh>0</AutoRefresh>
+  <DataSources>
+    <DataSource Name="MyPermitNow">
+      <DataSourceReference>/Report Parts/Data Sources/dsMyPermitNow</DataSourceReference>
+      <rd:SecurityType>None</rd:SecurityType>
+      <rd:DataSourceID>4489fc89-68c6-4cc5-a85b-af16e361d1d1</rd:DataSourceID>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="ds_AccountBalances">
+      <Query>
+        <DataSourceName>MyPermitNow</DataSourceName>
+        <CommandText>Select
+ContractorID = clj.contractorID,
+LicenseNumber = clj.licensenumber,
+Contractor = isnull(clj.businessname,''),
+EscrowBalance = (
+			isnull((select
+			sum(clpx.amount)
+			from
+			ContractorLicense_Payment_XREF clpx
+			where
+			clpx.isAddFund = 1
+			and isnull(clpx.isVoid,0)=0
+			and clpx.ContractorID = clj.ContractorID),0)
+			-
+			isnull((Select
+			SUM(ptpx.amount)
+			from
+			PermitsTracked_Payment_XREF ptpx
+			left outer join PermitsTracked pt on pt.PermitId = ptpx.PermitID
+			left outer join PermitsTracked_Contact_XREF ptcx on ptcx.ContactID = ptpx.ContactID
+			where
+			isnull(ptpx.isVoid,0) = 0
+			and ptpx.PaymentType like 'Escrow'
+			and ptcx.ContractorID_Jurisdiction = clj.ContractorID),0)
+			-
+			isnull((select
+			sum(clpx.amount)
+			from
+			ContractorLicense_Payment_XREF clpx
+			where
+			isnull(clpx.isAddFund,0) = 0
+			and isnull(clpx.isVoid,0)=0
+			and clpx.ContractorID = clj.ContractorID
+			and clpx.PaymentType like 'Escrow'),0))
+From
+ContractorLicense_Jurisdiction clj
+Where
+clj.ContractorID in (select distinct
+clj.contractorid
+from
+ContractorLicense_Jurisdiction clj
+left outer join contractorLicense_payment_XREF clpx on clpx.contractorID = clj.contractorID
+where
+clj.jurisdictionID = 130
+and clpx.isAddFund = 1
+and isnull(clpx.isVoid,0) = 0)</CommandText>
+      </Query>
+      <Fields>
+        <Field Name="LicenseNumber">
+          <DataField>LicenseNumber</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="ContractorID">
+          <DataField>ContractorID</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+        <Field Name="Contractor">
+          <DataField>Contractor</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="EscrowBalance">
+          <DataField>EscrowBalance</DataField>
+          <rd:TypeName>System.Decimal</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+  </DataSets>
+  <ReportSections>
+    <ReportSection>
+      <Body>
+        <ReportItems>
+          <Tablix Name="Tablix1">
+            <TablixBody>
+              <TablixColumns>
+                <TablixColumn>
+                  <Width>7.5in</Width>
+                </TablixColumn>
+              </TablixColumns>
+              <TablixRows>
+                <TablixRow>
+                  <Height>4.69792in</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Rectangle Name="Rectangle1">
+                          <ReportItems>
+                            <Subreport Name="Subreport1">
+                              <ReportName>/BeeCave/SUB_EscrowBalance</ReportName>
+                              <Parameters>
+                                <Parameter Name="Month">
+                                  <Value>=Parameters!Month.Value</Value>
+                                </Parameter>
+                                <Parameter Name="Year">
+                                  <Value>=Parameters!Year.Value</Value>
+                                </Parameter>
+                                <Parameter Name="ContractorID">
+                                  <Value>=Fields!ContractorID.Value</Value>
+                                </Parameter>
+                              </Parameters>
+                              <Height>4.69792in</Height>
+                              <Width>7.5in</Width>
+                              <Style>
+                                <Border>
+                                  <Style>None</Style>
+                                </Border>
+                              </Style>
+                            </Subreport>
+                          </ReportItems>
+                          <KeepTogether>true</KeepTogether>
+                          <Style>
+                            <Border>
+                              <Style>None</Style>
+                            </Border>
+                          </Style>
+                        </Rectangle>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+              </TablixRows>
+            </TablixBody>
+            <TablixColumnHierarchy>
+              <TablixMembers>
+                <TablixMember />
+              </TablixMembers>
+            </TablixColumnHierarchy>
+            <TablixRowHierarchy>
+              <TablixMembers>
+                <TablixMember>
+                  <Group Name="Details">
+                    <PageBreak>
+                      <BreakLocation>Between</BreakLocation>
+                    </PageBreak>
+                  </Group>
+                </TablixMember>
+              </TablixMembers>
+            </TablixRowHierarchy>
+            <Height>4.69792in</Height>
+            <Width>7.5in</Width>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+            </Style>
+          </Tablix>
+        </ReportItems>
+        <Height>4.69792in</Height>
+        <Style>
+          <Border>
+            <Style>None</Style>
+          </Border>
+        </Style>
+      </Body>
+      <Width>7.5in</Width>
+      <Page>
+        <LeftMargin>0.5in</LeftMargin>
+        <RightMargin>0.5in</RightMargin>
+        <TopMargin>0.5in</TopMargin>
+        <BottomMargin>0.5in</BottomMargin>
+        <Style />
+      </Page>
+    </ReportSection>
+  </ReportSections>
+  <ReportParameters>
+    <ReportParameter Name="Month">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>=datepart("m",today())</Value>
+        </Values>
+      </DefaultValue>
+      <Prompt>Month</Prompt>
+      <ValidValues>
+        <ParameterValues>
+          <ParameterValue>
+            <Value>01</Value>
+            <Label>January</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>02</Value>
+            <Label>February</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>03</Value>
+            <Label>March</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>04</Value>
+            <Label>April</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>05</Value>
+            <Label>May</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>06</Value>
+            <Label>June</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>07</Value>
+            <Label>July</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>08</Value>
+            <Label>August</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>09</Value>
+            <Label>September</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>10</Value>
+            <Label>October</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>11</Value>
+            <Label>November</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>12</Value>
+            <Label>December</Label>
+          </ParameterValue>
+        </ParameterValues>
+      </ValidValues>
+    </ReportParameter>
+    <ReportParameter Name="Year">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>=datepart("yyyy",today())</Value>
+        </Values>
+      </DefaultValue>
+      <Prompt>Year</Prompt>
+      <ValidValues>
+        <ParameterValues>
+          <ParameterValue>
+            <Value>=datepart("yyyy",today())</Value>
+            <Label>=datepart("yyyy",today())</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>=datepart("yyyy",(dateadd("yyyy",-1,today())))</Value>
+            <Label>=datepart("yyyy",(dateadd("yyyy",-1,today())))</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>=datepart("yyyy",(dateadd("yyyy",-2,today())))</Value>
+            <Label>=datepart("yyyy",(dateadd("yyyy",-2,today())))</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>=datepart("yyyy",(dateadd("yyyy",-3,today())))</Value>
+            <Label>=datepart("yyyy",(dateadd("yyyy",-3,today())))</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>=datepart("yyyy",(dateadd("yyyy",-4,today())))</Value>
+            <Label>=datepart("yyyy",(dateadd("yyyy",-4,today())))</Label>
+          </ParameterValue>
+        </ParameterValues>
+      </ValidValues>
+    </ReportParameter>
+  </ReportParameters>
+  <rd:ReportUnitType>Inch</rd:ReportUnitType>
+  <rd:ReportServerUrl>http://reports.mypermitnow.org/reportserver</rd:ReportServerUrl>
+  <rd:ReportID>7fd7fed8-7bbf-4499-822c-07a57ec9ba0e</rd:ReportID>
+</Report>
