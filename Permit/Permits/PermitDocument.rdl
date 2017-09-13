@@ -724,6 +724,24 @@ Order by ptrx.Priority</CommandText>
               <Paragraph>
                 <TextRuns>
                   <TextRun>
+                    <Value>I acknowledge that the required inspections must be completed before the project is considered complete.</Value>
+                    <Style>
+                      <FontStyle>Normal</FontStyle>
+                      <FontFamily>Verdana</FontFamily>
+                      <FontSize>8pt</FontSize>
+                      <FontWeight>Normal</FontWeight>
+                      <TextDecoration>None</TextDecoration>
+                      <Color>#000000</Color>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <ListStyle>Numbered</ListStyle>
+                <ListLevel>1</ListLevel>
+                <Style />
+              </Paragraph>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
                     <Value />
                     <Style>
                       <FontFamily>Verdana</FontFamily>
@@ -2963,6 +2981,6 @@ DWAD2AA2gA1gA9gANoANYAPYADaADWADYgMIawhrKNLYADaADWAD2AA2gA1gA9gANoANYAPYADaADWAD
     </EmbeddedImage>
   </EmbeddedImages>
   <rd:ReportUnitType>Inch</rd:ReportUnitType>
-  <rd:ReportServerUrl>http://sql.mypermitnow.org/reportserver</rd:ReportServerUrl>
+  <rd:ReportServerUrl>http://reports.mypermitnow.org/reportserver</rd:ReportServerUrl>
   <rd:ReportID>439b198f-6caa-4a89-a0bf-fe4e4aa7df7d</rd:ReportID>
 </Report>
